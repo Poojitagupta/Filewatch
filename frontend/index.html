@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FileWatch — File Integrity Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<!-- ONBOARDING -->
+<div id="page-onboarding" class="page active">
+  <nav class="ob-nav">
+    <div class="logo"><span class="logo-dot"></span>FILEWATCH</div>
+    <button class="btn-outline" onclick="App.showPage('login')">LOGIN →</button>
+  </nav>
+  <section class="ob-hero">
+    <div class="grid-bg"></div>
+    <div class="hero-content">
+      <p class="hero-tag">FILE INTEGRITY MONITOR</p>
+      <h1 class="hero-title">Guard every <span class="accent">byte</span><br>of your filesystem.</h1>
+      <p class="hero-sub">Real-time directory surveillance with SHA-256 hash verification. Powered by Python, FastAPI, and MongoDB.</p>
+      <div class="hero-cta">
+        <button class="btn-primary" onclick="App.showPage('login')">GET STARTED →</button>
+        <button class="btn-ghost">VIEW DOCS</button>
+      </div>
+    </div>
+  </section>
+  <section class="ob-features">
+    <div class="feat-card">
+      <div class="feat-icon">⚡</div>
+      <div class="feat-title">REAL-TIME MONITORING</div>
+      <p class="feat-desc">Watchdog-powered filesystem events detect changes instantly — no polling, no lag.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🔐</div>
+      <div class="feat-title">SHA-256 VERIFICATION</div>
+      <p class="feat-desc">Cryptographic checksums stored per file. Any tampering is caught the moment it happens.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">📡</div>
+      <div class="feat-title">WEBSOCKET ALERTS</div>
+      <p class="feat-desc">Dashboard updates live via WebSocket. Critical violations surface in real time.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🍃</div>
+      <div class="feat-title">MONGODB STORAGE</div>
+      <p class="feat-desc">All events, hashes, and file states persisted in MongoDB with full audit trail.</p>
+    </div>
+  </section>
+  <footer class="ob-footer">
+    <div class="stat"><div class="stat-num">FastAPI</div><div class="stat-lbl">backend framework</div></div>
+    <div class="stat-divider"></div>
+    <div class="stat"><div class="stat-num">SHA-256</div><div class="stat-lbl">hash algorithm</div></div>
+    <div class="stat-divider"></div>
+    <div class="stat"><div class="stat-num">MongoDB</div><div class="stat-lbl">persistent storage</div></div>
+    <div class="stat-divider"></div>
+    <div class="stat"><div class="stat-num">WebSocket</div><div class="stat-lbl">live events</div></div>
+  </footer>
+</div>
+
+<!-- LOGIN -->
+<div id="page-login" class="page">
+  <nav class="ob-nav">
+    <div class="logo"><span class="logo-dot"></span>FILEWATCH</div>
+    <button class="btn-ghost-sm" onclick="App.showPage('onboarding')">← BACK</button>
+  </nav>
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-logo">FILEWATCH //</div>
+        <h2 class="login-title">Welcome back</h2>
+        <p class="login-sub">Sign in to access your monitoring dashboard.</p>
+      </div>
+      <div id="login-error" class="alert alert-error" style="display:none"></div>
+      <div class="field">
+        <label class="field-label">EMAIL ADDRESS</label>
+        <input type="email" id="email" class="field-input" placeholder="admin@filewatch.io" />
+      </div>
+      <div class="field">
+        <label class="field-label">PASSWORD</label>
+        <input type="password" id="password" class="field-input" placeholder="••••••••••" />
+      </div>
+      <button class="btn-primary full-width" id="login-btn" onclick="Auth.login()">SIGN IN →</button>
+      <p class="login-hint">Default: admin@filewatch.io / admin123</p>
+      <div class="login-divider">or</div>
+      <button class="btn-outline full-width" onclick="App.showPage('register')">CREATE ACCOUNT</button>
+    </div>
+  </div>
+</div>
+
+<!-- REGISTER -->
+<div id="page-register" class="page">
+  <nav class="ob-nav">
+    <div class="logo"><span class="logo-dot"></span>FILEWATCH</div>
+    <button class="btn-ghost-sm" onclick="App.showPage('login')">← BACK</button>
+  </nav>
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-logo">FILEWATCH //</div>
+        <h2 class="login-title">Create account</h2>
+        <p class="login-sub">Start monitoring your filesystem in minutes.</p>
+      </div>
+      <div id="reg-error" class="alert alert-error" style="display:none"></div>
+      <div class="field">
+        <label class="field-label">FULL NAME</label>
+        <input type="text" id="reg-name" class="field-input" placeholder="Jane Doe" />
+      </div>
+      <div class="field">
+        <label class="field-label">EMAIL ADDRESS</label>
+        <input type="email" id="reg-email" class="field-input" placeholder="you@example.com" />
+      </div>
+      <div class="field">
+        <label class="field-label">PASSWORD</label>
+        <input type="password" id="reg-pass" class="field-input" placeholder="min 6 characters" />
+      </div>
+      <button class="btn-primary full-width" onclick="Auth.register()">CREATE ACCOUNT →</button>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="page-dashboard" class="page">
+  <div class="topbar">
+    <div class="logo"><span class="logo-dot"></span>FILEWATCH</div>
+    <div class="topbar-right">
+      <div class="ws-indicator" id="ws-dot" title="WebSocket status"></div>
+      <div class="avatar" id="user-avatar">AD</div>
+      <span class="topbar-user" id="user-name">Admin</span>
+      <button class="btn-ghost-sm" onclick="Auth.logout()">LOGOUT</button>
+    </div>
+  </div>
+  <div class="dash-container">
+    <div class="dash-header">
+      <div>
+        <h1 class="dash-title">MONITORING DASHBOARD</h1>
+        <p class="dash-sub" id="dash-sub">Loading...</p>
+      </div>
+      <button class="btn-outline" onclick="Dashboard.refreshAll()">↻ REFRESH</button>
+    </div>
+    <div class="metrics">
+      <div class="metric-card">
+        <div class="metric-label">DIRS WATCHED</div>
+        <div class="metric-value blue" id="m-dirs">—</div>
+        <div class="metric-sub">active</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">FILES TRACKED</div>
+        <div class="metric-value blue" id="m-files">—</div>
+        <div class="metric-sub">indexed</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">ALERTS TODAY</div>
+        <div class="metric-value red" id="m-alerts">—</div>
+        <div class="metric-sub">integrity violations</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">STATUS</div>
+        <div class="metric-value green">ACTIVE</div>
+        <div class="metric-sub" id="m-last-scan">agents running</div>
+      </div>
+    </div>
+    <div class="dash-grid">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">MONITORED DIRECTORIES</div>
+          <div class="panel-badge" id="dir-count-badge">0</div>
+        </div>
+        <div class="add-dir-row">
+          <input class="dir-input" id="dir-path" placeholder="/home/user/projects" />
+          <button class="btn-add" onclick="Dirs.add()">+ ADD</button>
+        </div>
+        <div class="dir-error" id="dir-error" style="display:none"></div>
+        <div class="dir-list" id="dir-list">
+          <div class="empty-state">No directories monitored yet.</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title">RECENT EVENTS</div>
+          <select class="filter-select" onchange="Events.load(this.value)">
+            <option value="">ALL</option>
+            <option value="warning">WARNINGS</option>
+            <option value="critical">CRITICAL</option>
+            <option value="info">INFO</option>
+          </select>
+        </div>
+        <div class="event-list" id="event-list">
+          <div class="empty-state">No events recorded yet.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
