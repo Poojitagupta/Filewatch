@@ -2,13 +2,8 @@
 monitor.py — Core engine
 Watchdog filesystem events + SHA-256 hashing + MongoDB persistence + WebSocket broadcast
 """
-
-import asyncio
 import hashlib
-
-
-
-
+import asyncio
 
 def hash_file(path: str) -> str:
     sha = hashlib.sha256()
