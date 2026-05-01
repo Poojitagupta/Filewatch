@@ -6,13 +6,7 @@ Watchdog filesystem events + SHA-256 hashing + MongoDB persistence + WebSocket b
 import asyncio
 import hashlib
 
-from watchdog.observers import Observer
 
-
-from services.ws_manager import ws_manager
-
-
-from config.database import db
 
 
 
