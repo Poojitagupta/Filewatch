@@ -1,11 +1,9 @@
 """Run once to create default admin user: python seed.py"""
 import asyncio
+import bcrypt
 from datetime import datetime
-from passlib.context import CryptContext
 from motor.motor_asyncio import AsyncIOMotorClient
 from config.settings import settings
-
-pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 async def seed():
     client = AsyncIOMotorClient(settings.MONGO_URI)
@@ -22,11 +20,16 @@ async def seed():
     # Ensure index exists
     await db.users.create_index("email", unique=True)
     
+    # Direct bcrypt hashing (bypassing passlib compatibility issues)
+    password = "admin123".encode('utf-8')
+    salt = bcrypt.gensalt()
+    hashed_password = bcrypt.hashpw(password, salt).decode('utf-8')
+    
     # Create admin user
     await db.users.insert_one({
         "name": "Admin",
         "email": email,
-        "password": pwd_ctx.hash("admin123"),
+        "password": hashed_password,
         "role": "admin",
         "created_at": datetime.utcnow(),
     })
