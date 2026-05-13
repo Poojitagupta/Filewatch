@@ -7,6 +7,8 @@ import os
 from config.database import get_db
 from middleware.auth import get_current_user
 from models.schemas import DirectoryCreate
+from services import monitor
+from services.monitor import scan_and_index 
 from services.monitor import monitor
 
 router = APIRouter(prefix="/api/directories", tags=["directories"])
@@ -25,7 +27,7 @@ def _out(doc: dict) -> dict:
     }
 
 
-@router.get("/")
+@router.get("")
 async def list_dirs(current_user: dict = Depends(get_current_user)):
     db     = get_db()
     cursor = db.directories.find({"user_id": current_user["id"]}, sort=[("created_at", -1)])
@@ -33,7 +35,7 @@ async def list_dirs(current_user: dict = Depends(get_current_user)):
     return {"directories": dirs}
 
 
-@router.post("/", status_code=201)
+@router.post("", status_code=201)
 async def add_dir(body: DirectoryCreate, current_user: dict = Depends(get_current_user)):
     db = get_db()
 
@@ -63,7 +65,7 @@ async def add_dir(body: DirectoryCreate, current_user: dict = Depends(get_curren
     return {"directory": _out(doc)}
 
 
-@router.delete("/{dir_id}")
+@router.delete("{dir_id}")
 async def remove_dir(dir_id: str, current_user: dict = Depends(get_current_user)):
     db  = get_db()
     doc = await db.directories.find_one({"_id": ObjectId(dir_id), "user_id": current_user["id"]})
@@ -76,7 +78,7 @@ async def remove_dir(dir_id: str, current_user: dict = Depends(get_current_user)
     return {"message": "Directory removed from monitoring"}
 
 
-@router.post("/{dir_id}/scan")
+@router.post("{dir_id}/scan")
 async def trigger_scan(dir_id: str, current_user: dict = Depends(get_current_user)):
     db  = get_db()
     doc = await db.directories.find_one({"_id": ObjectId(dir_id), "user_id": current_user["id"]})
@@ -85,3 +87,47 @@ async def trigger_scan(dir_id: str, current_user: dict = Depends(get_current_use
 
     asyncio.create_task(monitor.baseline_scan(dir_id, current_user["id"], doc["path"]))
     return {"message": "Scan initiated"}
+
+
+@router.post("/{dir_id}/scan")
+async def scan_directory(dir_id: str, current_user: dict = Depends(get_current_user)):
+    # 1. Find the directory in the database
+    directory = await db.directories.find_one({"_id": ObjectId(dir_id), "user_id": current_user["id"]})
+    if not directory:
+        raise HTTPException(status_code=404, detail="Directory not found")
+
+    # 2. Trigger the scan logic from your monitor service
+    # This will re-hash all files and compare them to the DB
+    try:
+        await monitor.scan_and_index(directory["path"], str(directory["_id"]), current_user["id"])
+        
+        # 3. Update the "last_scan" time in the database
+        await db.directories.update_one(
+            {"_id": ObjectId(dir_id)},
+            {"$set": {"last_scan": datetime.utcnow()}}
+        )
+        return {"message": "Scan completed successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Scan failed: {str(e)}")
+    
+
+@router.post("/{dir_id}/scan")
+async def manual_scan(dir_id: str, current_user: dict = Depends(get_current_user)):
+    directory = await db.directories.find_one({
+        "_id": ObjectId(dir_id), 
+        "user_id": current_user["id"]
+    })
+    
+    if not directory:
+        raise HTTPException(status_code=404, detail="Directory not found")
+
+    # Run the scan
+    await scan_and_index(directory["path"], dir_id, current_user["id"])
+    
+    # Update last scan time
+    await db.directories.update_one(
+        {"_id": ObjectId(dir_id)},
+        {"$set": {"last_scan": datetime.utcnow()}}
+    )
+    
+    return {"status": "success", "message": f"Scanned {directory['path']}"}
