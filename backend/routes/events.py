@@ -67,5 +67,6 @@ async def list_events(
     if dir_id:   query["directory_id"] = dir_id
 
     cursor = db.events.find(query, sort=[("created_at", -1)], limit=limit)
+    
     events = [_out(e) async for e in cursor]
     return {"events": events}
